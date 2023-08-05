@@ -1,0 +1,11 @@
+{
+  "extends": "airbnb-base",
+  "overrides": [
+    {
+      "files": ["*.js"],
+      "rules": {
+        "camelcase": ["error", { "allow": ["_id"] }]
+      }
+    }
+  ]
+}
