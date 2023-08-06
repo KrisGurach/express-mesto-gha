@@ -1,15 +1,9 @@
 /* eslint-disable no-underscore-dangle */
 const mongoose = require('mongoose');
 const User = require('../models/user');
+const { createError } = require('../helpers/errorHelpers');
 
-const createError = (error, message) => {
-  if (!message) {
-    // eslint-disable-next-line no-param-reassign
-    message = error.message;
-  }
-
-  return { message };
-};
+const userNotFound = (id) => `Пользователь с указанным id = ${id} не найден.`;
 
 function getAllUsers(_, res) {
   User.find({})
@@ -27,7 +21,7 @@ const getUserById = (req, res) => {
       if (e instanceof mongoose.Error.CastError) {
         res.status(400).send(createError(e, 'Переданы некорректные данные при поиске пользователя.'));
       } else if (e instanceof mongoose.Error.DocumentNotFoundError) {
-        res.status(404).send(createError(e, `Пользователь с указанным id = ${id} не найден.`));
+        res.status(404).send(createError(e, userNotFound(id)));
       } else {
         res.status(500).send(createError(e));
       }
@@ -58,7 +52,7 @@ const updateUser = (req, res) => {
       if (e instanceof mongoose.Error.ValidationError) {
         res.status(400).send(createError(e, 'Переданы некорректные данные при обновлении профиля.'));
       } else if (e instanceof mongoose.Error.CastError) {
-        res.status(404).send(createError(e, `Пользователь с указанным id = ${id} не найден.`));
+        res.status(404).send(createError(e, userNotFound(id)));
       } else {
         res.status(500).send(createError(e));
       }
@@ -75,7 +69,7 @@ const updateAvatar = (req, res) => {
       if (e instanceof mongoose.Error.ValidationError) {
         res.status(400).send(createError(e, 'Переданы некорректные данные при обновлении аватара.'));
       } else if (e instanceof mongoose.Error.CastError) {
-        res.status(404).send(createError(e, `Пользователь с указанным id = ${id} не найден.`));
+        res.status(404).send(createError(e, userNotFound(id)));
       } else {
         res.status(500).send(createError(e));
       }

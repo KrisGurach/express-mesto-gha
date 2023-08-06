@@ -1,15 +1,7 @@
 /* eslint-disable no-underscore-dangle */
 const mongoose = require('mongoose');
 const Card = require('../models/card');
-
-const createError = (error, message) => {
-  if (!message) {
-    // eslint-disable-next-line no-param-reassign
-    message = error.message;
-  }
-
-  return { message };
-};
+const { createError } = require('../helpers/errorHelpers');
 
 const getAllCards = (_, res) => {
   Card.find({})
@@ -27,7 +19,7 @@ const deleteCardById = (req, res) => {
       if (e instanceof mongoose.Error.CastError) {
         res.status(400).send(createError(e, 'Переданы некорректные данные при удалении карточки.'));
       } else if (e instanceof mongoose.Error.DocumentNotFoundError) {
-        res.status(404).send(createError(e, `Карточка с указанным id = ${id} не найден.`));
+        res.status(404).send(createError(e, `Карточка с указанным id = ${id} не найдена.`));
       } else {
         res.status(500).send(createError(e));
       }
