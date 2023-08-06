@@ -21,9 +21,12 @@ const deleteCardById = (req, res) => {
   const id = req.params.cardId;
 
   Card.findByIdAndRemove(id)
+    .orFail()
     .then((data) => res.send(data))
     .catch((e) => {
       if (e instanceof mongoose.Error.CastError) {
+        res.status(400).send(createError(e, 'Переданы некорректные данные при удалении карточки.'));
+      } else if (e instanceof mongoose.Error.DocumentNotFoundError) {
         res.status(404).send(createError(e, `Карточка с указанным id = ${id} не найден.`));
       } else {
         res.status(500).send(createError(e));
@@ -53,11 +56,12 @@ const addLike = (req, res) => {
     { $addToSet: { likes: req.user._id } },
     { new: true },
   )
+    .orFail()
     .then((data) => res.send(data))
     .catch((e) => {
-      if (e instanceof mongoose.Error.ValidationError) {
+      if (e instanceof mongoose.Error.CastError) {
         res.status(400).send(createError(e, 'Переданы некорректные данные для постановки лайка.'));
-      } else if (e instanceof mongoose.Error.CastError) {
+      } else if (e instanceof mongoose.Error.DocumentNotFoundError) {
         res.status(404).send(createError(e, `Передан несуществующий id = ${id} карточки.`));
       } else {
         res.status(500).send(createError(e));
@@ -73,11 +77,12 @@ const deleteLike = (req, res) => {
     { $pull: { likes: req.user._id } },
     { new: true },
   )
+    .orFail()
     .then((data) => res.send(data))
     .catch((e) => {
-      if (e instanceof mongoose.Error.ValidationError) {
+      if (e instanceof mongoose.Error.CastError) {
         res.status(400).send(createError(e, 'Переданы некорректные данные для снятия лайка.'));
-      } else if (e instanceof mongoose.Error.CastError) {
+      } else if (e instanceof mongoose.Error.DocumentNotFoundError) {
         res.status(404).send(createError(e, `Передан несуществующий id = ${id} карточки.`));
       } else {
         res.status(500).send(createError(e));

@@ -18,7 +18,7 @@ try {
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
 
-app.use((req, res, next) => {
+app.use((req, _, next) => {
   req.user = {
     _id: '64ce4ba9ad564cdf1b00faec',
   };
@@ -28,6 +28,8 @@ app.use((req, res, next) => {
 
 app.use('/users', require('./routes/users'));
 app.use('/cards', require('./routes/cards'));
+
+app.use((_, res) => res.status(404).send({ message: 'Not found' }));
 
 app.listen(PORT, () => {
   // eslint-disable-next-line no-console

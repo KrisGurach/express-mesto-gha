@@ -2,10 +2,10 @@
 const mongoose = require('mongoose');
 const User = require('../models/user');
 
-const createError = (message) => {
+const createError = (error, message) => {
   if (!message) {
     // eslint-disable-next-line no-param-reassign
-    message = 'Произошла ошибка на сервере';
+    message = error.message;
   }
 
   return { message };
@@ -14,19 +14,22 @@ const createError = (message) => {
 function getAllUsers(_, res) {
   User.find({})
     .then((data) => res.send(data))
-    .catch(() => res.status(500).send(createError()));
+    .catch((e) => res.status(500).send(createError(e)));
 }
 
 const getUserById = (req, res) => {
   const id = req.params.userId;
 
   User.findById(id)
+    .orFail()
     .then((user) => res.send(user))
     .catch((e) => {
       if (e instanceof mongoose.Error.CastError) {
-        res.status(404).send(createError(`Пользователь с указанным id = ${id} не найден.`));
+        res.status(400).send(createError(e, 'Переданы некорректные данные при поиске пользователя.'));
+      } else if (e instanceof mongoose.Error.DocumentNotFoundError) {
+        res.status(404).send(createError(e, `Пользователь с указанным id = ${id} не найден.`));
       } else {
-        res.status(500).send(createError());
+        res.status(500).send(createError(e));
       }
     });
 };
@@ -38,9 +41,9 @@ const createUser = (req, res) => {
     .then((data) => res.send(data))
     .catch((e) => {
       if (e instanceof mongoose.Error.ValidationError) {
-        res.status(400).send(createError('Переданы некорректные данные при создании пользователя.'));
+        res.status(400).send(createError(e, 'Переданы некорректные данные при создании пользователя.'));
       } else {
-        res.status(500).send(createError());
+        res.status(500).send(createError(e));
       }
     });
 };
@@ -49,15 +52,15 @@ const updateUser = (req, res) => {
   const { name, about } = req.body;
   const id = req.user._id;
 
-  User.findByIdAndUpdate(id, { name, about })
+  User.findByIdAndUpdate(id, { name, about }, { new: true, runValidators: true })
     .then((user) => res.send(user))
     .catch((e) => {
       if (e instanceof mongoose.Error.ValidationError) {
-        res.status(400).send(createError('Переданы некорректные данные при обновлении профиля.'));
+        res.status(400).send(createError(e, 'Переданы некорректные данные при обновлении профиля.'));
       } else if (e instanceof mongoose.Error.CastError) {
-        res.status(404).send(createError(`Пользователь с указанным id = ${id} не найден.`));
+        res.status(404).send(createError(e, `Пользователь с указанным id = ${id} не найден.`));
       } else {
-        res.status(500).send(createError());
+        res.status(500).send(createError(e));
       }
     });
 };
@@ -66,15 +69,15 @@ const updateAvatar = (req, res) => {
   const { avatar } = req.body;
   const id = req.user._id;
 
-  User.findByIdAndUpdate(id, { avatar })
+  User.findByIdAndUpdate(id, { avatar }, { new: true })
     .then((user) => res.send(user))
     .catch((e) => {
       if (e instanceof mongoose.Error.ValidationError) {
-        res.status(400).send(createError('Переданы некорректные данные при обновлении аватара.'));
+        res.status(400).send(createError(e, 'Переданы некорректные данные при обновлении аватара.'));
       } else if (e instanceof mongoose.Error.CastError) {
-        res.status(404).send(createError(`Пользователь с указанным id = ${id} не найден.`));
+        res.status(404).send(createError(e, `Пользователь с указанным id = ${id} не найден.`));
       } else {
-        res.status(500).send(createError());
+        res.status(500).send(createError(e));
       }
     });
 };
