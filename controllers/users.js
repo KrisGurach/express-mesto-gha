@@ -1,14 +1,19 @@
 /* eslint-disable no-underscore-dangle */
 const mongoose = require('mongoose');
 const User = require('../models/user');
-const { createError } = require('../helpers/errorHelpers');
+const {
+  createError,
+  serverErrorCode,
+  validationErrorCode,
+  notFoundErrorCode,
+} = require('../helpers/errorHelpers');
 
 const userNotFound = (id) => `Пользователь с указанным id = ${id} не найден.`;
 
 function getAllUsers(_, res) {
   User.find({})
     .then((data) => res.send(data))
-    .catch((e) => res.status(500).send(createError(e)));
+    .catch(() => res.status(serverErrorCode).send(createError()));
 }
 
 const getUserById = (req, res) => {
@@ -19,11 +24,11 @@ const getUserById = (req, res) => {
     .then((user) => res.send(user))
     .catch((e) => {
       if (e instanceof mongoose.Error.CastError) {
-        res.status(400).send(createError(e, 'Переданы некорректные данные при поиске пользователя.'));
+        res.status(validationErrorCode).send(createError('Переданы некорректные данные при поиске пользователя.'));
       } else if (e instanceof mongoose.Error.DocumentNotFoundError) {
-        res.status(404).send(createError(e, userNotFound(id)));
+        res.status(notFoundErrorCode).send(createError(userNotFound(id)));
       } else {
-        res.status(500).send(createError(e));
+        res.status(serverErrorCode).send(createError());
       }
     });
 };
@@ -35,9 +40,9 @@ const createUser = (req, res) => {
     .then((data) => res.send(data))
     .catch((e) => {
       if (e instanceof mongoose.Error.ValidationError) {
-        res.status(400).send(createError(e, 'Переданы некорректные данные при создании пользователя.'));
+        res.status(validationErrorCode).send(createError('Переданы некорректные данные при создании пользователя.'));
       } else {
-        res.status(500).send(createError(e));
+        res.status(serverErrorCode).send(createError());
       }
     });
 };
@@ -50,11 +55,11 @@ const updateUser = (req, res) => {
     .then((user) => res.send(user))
     .catch((e) => {
       if (e instanceof mongoose.Error.ValidationError) {
-        res.status(400).send(createError(e, 'Переданы некорректные данные при обновлении профиля.'));
+        res.status(validationErrorCode).send(createError('Переданы некорректные данные при обновлении профиля.'));
       } else if (e instanceof mongoose.Error.CastError) {
-        res.status(404).send(createError(e, userNotFound(id)));
+        res.status(notFoundErrorCode).send(createError(userNotFound(id)));
       } else {
-        res.status(500).send(createError(e));
+        res.status(serverErrorCode).send(createError());
       }
     });
 };
@@ -67,11 +72,11 @@ const updateAvatar = (req, res) => {
     .then((user) => res.send(user))
     .catch((e) => {
       if (e instanceof mongoose.Error.ValidationError) {
-        res.status(400).send(createError(e, 'Переданы некорректные данные при обновлении аватара.'));
+        res.status(validationErrorCode).send(createError('Переданы некорректные данные при обновлении аватара.'));
       } else if (e instanceof mongoose.Error.CastError) {
-        res.status(404).send(createError(e, userNotFound(id)));
+        res.status(notFoundErrorCode).send(createError(userNotFound(id)));
       } else {
-        res.status(500).send(createError(e));
+        res.status(serverErrorCode).send(createError());
       }
     });
 };

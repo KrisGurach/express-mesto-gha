@@ -1,7 +1,7 @@
 const express = require('express');
 const mongoose = require('mongoose');
 const bodyParser = require('body-parser');
-const { createError } = require('./helpers/errorHelpers');
+const { createError, notFoundErrorCode } = require('./helpers/errorHelpers');
 
 const app = express();
 
@@ -30,7 +30,7 @@ app.use((req, _, next) => {
 app.use('/users', require('./routes/users'));
 app.use('/cards', require('./routes/cards'));
 
-app.use((_, res) => res.status(404).send(createError(_, 'Not found')));
+app.use((_, res) => res.status(notFoundErrorCode).send(createError('Not found')));
 
 app.listen(PORT, () => {
   // eslint-disable-next-line no-console
