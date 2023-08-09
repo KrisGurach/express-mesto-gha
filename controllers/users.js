@@ -47,11 +47,10 @@ const createUser = (req, res) => {
     });
 };
 
-const updateUser = (req, res) => {
-  const { name, about } = req.body;
+const updateById = (req, res, parameters) => {
   const id = req.user._id;
 
-  User.findByIdAndUpdate(id, { name, about }, { new: true, runValidators: true })
+  User.findByIdAndUpdate(id, parameters, { new: true, runValidators: true })
     .then((user) => res.send(user))
     .catch((e) => {
       if (e instanceof mongoose.Error.ValidationError) {
@@ -62,19 +61,14 @@ const updateUser = (req, res) => {
     });
 };
 
+const updateUser = (req, res) => {
+  const { name, about } = req.body;
+  updateById(req, res, { name, about });
+};
+
 const updateAvatar = (req, res) => {
   const { avatar } = req.body;
-  const id = req.user._id;
-
-  User.findByIdAndUpdate(id, { avatar }, { new: true, runValidators: true })
-    .then((user) => res.send(user))
-    .catch((e) => {
-      if (e instanceof mongoose.Error.ValidationError) {
-        res.status(validationErrorCode).send(createError('Переданы некорректные данные при обновлении аватара.'));
-      } else {
-        res.status(serverErrorCode).send(createError());
-      }
-    });
+  updateById(req, res, { avatar });
 };
 
 module.exports = {

@@ -1,6 +1,5 @@
 const express = require('express');
 const mongoose = require('mongoose');
-const { createError, notFoundErrorCode } = require('./helpers/errorHelpers');
 
 const app = express();
 
@@ -18,18 +17,7 @@ try {
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 
-app.use((req, _, next) => {
-  req.user = {
-    _id: '64ce4ba9ad564cdf1b00faec',
-  };
-
-  next();
-});
-
-app.use('/users', require('./routes/users'));
-app.use('/cards', require('./routes/cards'));
-
-app.use((_, res) => res.status(notFoundErrorCode).send(createError('Not found')));
+app.use('/', require('./routes/index'));
 
 app.listen(PORT, () => {
   // eslint-disable-next-line no-console
