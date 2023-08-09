@@ -1,6 +1,5 @@
 const express = require('express');
 const mongoose = require('mongoose');
-const bodyParser = require('body-parser');
 const { createError, notFoundErrorCode } = require('./helpers/errorHelpers');
 
 const app = express();
@@ -16,8 +15,8 @@ try {
   console.log(`error connection: ${err}`);
 }
 
-app.use(bodyParser.urlencoded({ extended: true }));
-app.use(bodyParser.json());
+app.use(express.urlencoded({ extended: true }));
+app.use(express.json());
 
 app.use((req, _, next) => {
   req.user = {

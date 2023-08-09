@@ -56,8 +56,6 @@ const updateUser = (req, res) => {
     .catch((e) => {
       if (e instanceof mongoose.Error.ValidationError) {
         res.status(validationErrorCode).send(createError('Переданы некорректные данные при обновлении профиля.'));
-      } else if (e instanceof mongoose.Error.CastError) {
-        res.status(notFoundErrorCode).send(createError(userNotFound(id)));
       } else {
         res.status(serverErrorCode).send(createError());
       }
@@ -68,13 +66,11 @@ const updateAvatar = (req, res) => {
   const { avatar } = req.body;
   const id = req.user._id;
 
-  User.findByIdAndUpdate(id, { avatar }, { new: true })
+  User.findByIdAndUpdate(id, { avatar }, { new: true, runValidators: true })
     .then((user) => res.send(user))
     .catch((e) => {
       if (e instanceof mongoose.Error.ValidationError) {
         res.status(validationErrorCode).send(createError('Переданы некорректные данные при обновлении аватара.'));
-      } else if (e instanceof mongoose.Error.CastError) {
-        res.status(notFoundErrorCode).send(createError(userNotFound(id)));
       } else {
         res.status(serverErrorCode).send(createError());
       }
