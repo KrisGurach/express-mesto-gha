@@ -1,5 +1,8 @@
+/* eslint-disable import/no-extraneous-dependencies */
 /* eslint-disable no-underscore-dangle */
 const mongoose = require('mongoose');
+const bcrypt = require('bcryptjs');
+
 const User = require('../models/user');
 const {
   createError,
@@ -34,13 +37,34 @@ const getUserById = (req, res) => {
 };
 
 const createUser = (req, res) => {
-  const { about, avatar, name } = req.body;
+  const {
+    about,
+    avatar,
+    name,
+    email,
+    password,
+  } = req.body;
 
-  User.create({ name, about, avatar })
+  if (!password) {
+    res.status(validationErrorCode).send(createError('Переданы некорректные данные при создании пользователя.'));
+    return;
+  }
+
+  bcrypt
+    .hash(password, 10)
+    .then((hash) => User.create({
+      name,
+      about,
+      avatar,
+      email,
+      password: hash,
+    }))
     .then((data) => res.send(data))
     .catch((e) => {
       if (e instanceof mongoose.Error.ValidationError) {
-        res.status(validationErrorCode).send(createError('Переданы некорректные данные при создании пользователя.'));
+        res
+          .status(validationErrorCode)
+          .send(createError('Переданы некорректные данные при создании пользователя.'));
       } else {
         res.status(serverErrorCode).send(createError());
       }
