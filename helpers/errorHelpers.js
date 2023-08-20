@@ -10,5 +10,6 @@ module.exports.createError = (message) => {
 };
 
 module.exports.validationErrorCode = 400;
+module.exports.notAuthorizedErrorCode = 401;
 module.exports.notFoundErrorCode = 404;
 module.exports.serverErrorCode = 500;
