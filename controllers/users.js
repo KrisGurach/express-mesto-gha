@@ -20,21 +20,28 @@ function getAllUsers(_, res) {
     .catch(() => res.status(serverErrorCode).send(createError()));
 }
 
-const getUserById = (req, res) => {
-  const id = req.params.userId;
-
+function findUserById(id, res) {
   User.findById(id)
     .orFail()
     .then((user) => res.send(user))
     .catch((e) => {
       if (e instanceof mongoose.Error.CastError) {
-        res.status(validationErrorCode).send(createError('Переданы некорректные данные при поиске пользователя.'));
+        res
+          .status(validationErrorCode)
+          .send(
+            createError('Переданы некорректные данные при поиске пользователя.'),
+          );
       } else if (e instanceof mongoose.Error.DocumentNotFoundError) {
         res.status(notFoundErrorCode).send(createError(userNotFound(id)));
       } else {
         res.status(serverErrorCode).send(createError());
       }
     });
+}
+
+const getUserById = (req, res) => {
+  const id = req.params.userId;
+  findUserById(id, res);
 };
 
 const createUser = (req, res) => {
@@ -121,6 +128,11 @@ const login = (req, res) => {
     });
 };
 
+const getCurrentUserById = (req, res) => {
+  const id = req.user._id;
+  findUserById(id, res);
+};
+
 module.exports = {
   getAllUsers,
   getUserById,
@@ -128,4 +140,5 @@ module.exports = {
   updateUser,
   updateAvatar,
   login,
+  getCurrentUserById,
 };

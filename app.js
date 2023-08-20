@@ -17,14 +17,6 @@ try {
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 
-app.use((req, _, next) => {
-  req.user = {
-    _id: '64ce4ba9ad564cdf1b00faec',
-  };
-
-  next();
-});
-
 app.use('/', require('./routes/index'));
 
 app.listen(PORT, () => {
