@@ -16,11 +16,21 @@ const getAllCards = (_, res) => {
 const deleteCardById = (req, res) => {
   const id = req.params.cardId;
 
-  Card.findByIdAndRemove(id)
-    .orFail()
-    .then((data) => res.send(data))
+  Card.findById(id)
+    .then((card) => {
+      if (card.owner.toString() !== req.user._id) {
+        throw new mongoose.Error.ValidationError();
+      }
+
+      Card.findByIdAndRemove(id)
+        .orFail()
+        .then((data) => res.send(data))
+        .catch(() => res.status(serverErrorCode).send(createError()));
+    })
     .catch((e) => {
-      if (e instanceof mongoose.Error.CastError) {
+      if (e instanceof mongoose.Error.ValidationError) {
+        res.status(validationErrorCode).send(createError('Можно удалять только собственные карточки.'));
+      } else if (e instanceof mongoose.Error.CastError) {
         res.status(validationErrorCode).send(createError('Переданы некорректные данные при удалении карточки.'));
       } else if (e instanceof mongoose.Error.DocumentNotFoundError) {
         res.status(notFoundErrorCode).send(createError(`Карточка с указанным id = ${id} не найдена.`));
