@@ -2,6 +2,8 @@ const mongoose = require('mongoose');
 // eslint-disable-next-line import/no-extraneous-dependencies
 const validator = require('validator');
 const bcrypt = require('bcryptjs');
+const NotAuthorizedError = require('../helpers/errors/authorizationError');
+const { notAuthorizedErrorMessage: notAuthrizedErrorMessage } = require('../helpers/errors/errorHelpers');
 
 const userSchema = new mongoose.Schema({
   name: {
@@ -43,13 +45,13 @@ userSchema.statics.findUserByCredentials = function (email, password) {
     .select('+password')
     .then((user) => {
       if (!user) {
-        return Promise.reject(new Error('Неправильные почта или пароль'));
+        throw new NotAuthorizedError(notAuthrizedErrorMessage);
       }
 
       return bcrypt.compare(password, user.password)
         .then((valid) => {
           if (!valid) {
-            return Promise.reject(new Error('Неправильные почта или пароль'));
+            throw new NotAuthorizedError(notAuthrizedErrorMessage);
           }
 
           return user;

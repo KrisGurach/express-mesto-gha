@@ -1,3 +1,4 @@
+/* eslint-disable import/extensions */
 /* eslint-disable import/no-extraneous-dependencies */
 /* eslint-disable no-underscore-dangle */
 const mongoose = require('mongoose');
@@ -5,46 +6,39 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 
 const User = require('../models/user');
-const {
-  createError,
-  serverErrorCode,
-  validationErrorCode,
-  notFoundErrorCode,
-} = require('../helpers/errorHelpers');
+const { secretKey } = require('../helpers/passwordHelpers');
+const ValidationError = require('../helpers/errors/validationError');
+const NotFoundError = require('../helpers/errors/notFoundError');
+const DuplicateUniqueValueError = require('../helpers/errors/duplicateUniqueValueError');
 
 const userNotFound = (id) => `Пользователь с указанным id = ${id} не найден.`;
 
-function getAllUsers(_, res) {
+function getAllUsers(_, res, next) {
   User.find({})
     .then((data) => res.send(data))
-    .catch(() => res.status(serverErrorCode).send(createError()));
+    .catch(next);
 }
 
-function findUserById(id, res) {
+function findUserById(id, res, next) {
   User.findById(id)
     .orFail()
     .then((user) => res.send(user))
     .catch((e) => {
       if (e instanceof mongoose.Error.CastError) {
-        res
-          .status(validationErrorCode)
-          .send(
-            createError('Переданы некорректные данные при поиске пользователя.'),
-          );
+        throw new ValidationError('Переданы некорректные данные при поиске пользователя.');
       } else if (e instanceof mongoose.Error.DocumentNotFoundError) {
-        res.status(notFoundErrorCode).send(createError(userNotFound(id)));
-      } else {
-        res.status(serverErrorCode).send(createError());
+        throw new NotFoundError(userNotFound(id));
       }
-    });
+    })
+    .catch(next);
 }
 
-const getUserById = (req, res) => {
+const getUserById = (req, res, next) => {
   const id = req.params.userId;
-  findUserById(id, res);
+  findUserById(id, res, next);
 };
 
-const createUser = (req, res) => {
+const createUser = (req, res, next) => {
   const {
     about,
     avatar,
@@ -56,8 +50,7 @@ const createUser = (req, res) => {
   const validationErrorMessage = 'Переданы некорректные данные при создании пользователя.';
 
   if (!password) {
-    res.status(validationErrorCode).send(createError(validationErrorMessage));
-    return;
+    throw new ValidationError(validationErrorMessage);
   }
 
   bcrypt
@@ -72,47 +65,45 @@ const createUser = (req, res) => {
     .then((data) => res.send(data))
     .catch((e) => {
       if (e instanceof mongoose.Error.ValidationError) {
-        res
-          .status(validationErrorCode)
-          .send(createError(validationErrorMessage));
-      } else {
-        res.status(serverErrorCode).send(createError());
+        throw new ValidationError(validationErrorMessage);
+      } else if (e.code === 11000) {
+        throw new DuplicateUniqueValueError('Ползователь с указанным email уже существует');
       }
-    });
+    })
+    .catch(next);
 };
 
-const updateById = (req, res, parameters) => {
+const updateById = (req, res, parameters, next) => {
   const id = req.user._id;
 
   User.findByIdAndUpdate(id, parameters, { new: true, runValidators: true })
     .then((user) => res.send(user))
     .catch((e) => {
       if (e instanceof mongoose.Error.ValidationError) {
-        res.status(validationErrorCode).send(createError('Переданы некорректные данные при обновлении профиля.'));
-      } else {
-        res.status(serverErrorCode).send(createError());
+        throw new ValidationError('Переданы некорректные данные при обновлении профиля.');
       }
-    });
+    })
+    .catch(next);
 };
 
-const updateUser = (req, res) => {
+const updateUser = (req, res, next) => {
   const { name, about } = req.body;
-  updateById(req, res, { name, about });
+  updateById(req, res, { name, about }, next);
 };
 
-const updateAvatar = (req, res) => {
+const updateAvatar = (req, res, next) => {
   const { avatar } = req.body;
-  updateById(req, res, { avatar });
+  updateById(req, res, { avatar }, next);
 };
 
-const login = (req, res) => {
+const login = (req, res, next) => {
   const { email, password } = req.body;
 
   return User.findUserByCredentials(email, password)
     .then((user) => {
       const token = jwt.sign(
         { _id: user._id },
-        'some-secret-key',
+        secretKey,
         { expiresIn: '7d' },
       );
       res.cookie('jwt', token, {
@@ -121,16 +112,12 @@ const login = (req, res) => {
       })
         .end();
     })
-    .catch((err) => {
-      res
-        .status(401)
-        .send({ message: err.message });
-    });
+    .catch(next);
 };
 
-const getCurrentUserById = (req, res) => {
+const getCurrentUserById = (req, res, next) => {
   const id = req.user._id;
-  findUserById(id, res);
+  findUserById(id, res, next);
 };
 
 module.exports = {

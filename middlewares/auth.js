@@ -1,26 +1,25 @@
+/* eslint-disable import/extensions */
 /* eslint-disable consistent-return */
 /* eslint-disable import/no-extraneous-dependencies */
 const jwt = require('jsonwebtoken');
-const { notAuthorizedErrorCode } = require('../helpers/errorHelpers');
+const { notAuthorizedErrorMessage } = require('../helpers/errors/errorHelpers');
+const { secretKey } = require('../helpers/passwordHelpers');
+const NotAuthorizedError = require('../helpers/errors/authorizationError');
 
-module.exports = (req, res, next) => {
+module.exports = (req, _, next) => {
   const { authorization } = req.headers;
 
   if (!authorization || !authorization.startsWith('Bearer ')) {
-    return res
-      .status(notAuthorizedErrorCode)
-      .send({ message: 'Необходима авторизация' });
+    throw new NotAuthorizedError(notAuthorizedErrorMessage);
   }
 
   const token = authorization.replace('Bearer ', '');
   let payload;
 
   try {
-    payload = jwt.verify(token, 'some-secret-key');
+    payload = jwt.verify(token, secretKey);
   } catch (err) {
-    return res
-      .status(notAuthorizedErrorCode)
-      .send({ message: 'Необходима авторизация' });
+    throw new NotAuthorizedError(notAuthorizedErrorMessage);
   }
 
   req.user = payload;

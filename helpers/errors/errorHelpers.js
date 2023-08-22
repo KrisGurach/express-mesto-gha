@@ -1,4 +1,5 @@
 const defaultErrorMessage = 'На сервере произошла ошибка';
+module.exports.notAuthorizedErrorMessage = 'Необходима авторизация';
 
 module.exports.createError = (message) => {
   if (!message) {
@@ -12,4 +13,5 @@ module.exports.createError = (message) => {
 module.exports.validationErrorCode = 400;
 module.exports.notAuthorizedErrorCode = 401;
 module.exports.notFoundErrorCode = 404;
+module.exports.duplicateUniqueValueErrorCode = 409;
 module.exports.serverErrorCode = 500;
