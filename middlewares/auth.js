@@ -3,7 +3,7 @@
 /* eslint-disable import/no-extraneous-dependencies */
 const jwt = require('jsonwebtoken');
 const { notAuthorizedErrorMessage } = require('../helpers/errors/errorHelpers');
-const { secretKey } = require('../helpers/passwordHelpers');
+const { secretKey } = require('../helpers/constantsHelpers');
 const NotAuthorizedError = require('../helpers/errors/authorizationError');
 
 module.exports = (req, _, next) => {

@@ -6,7 +6,7 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 
 const User = require('../models/user');
-const { secretKey } = require('../helpers/passwordHelpers');
+const { secretKey } = require('../helpers/constantsHelpers');
 const ValidationError = require('../helpers/errors/validationError');
 const NotFoundError = require('../helpers/errors/notFoundError');
 const DuplicateUniqueValueError = require('../helpers/errors/duplicateUniqueValueError');

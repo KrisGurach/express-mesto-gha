@@ -4,6 +4,7 @@ const validator = require('validator');
 const bcrypt = require('bcryptjs');
 const NotAuthorizedError = require('../helpers/errors/authorizationError');
 const { notAuthorizedErrorMessage: notAuthrizedErrorMessage } = require('../helpers/errors/errorHelpers');
+const { pattern } = require('../helpers/constantsHelpers');
 
 const userSchema = new mongoose.Schema({
   name: {
@@ -21,6 +22,7 @@ const userSchema = new mongoose.Schema({
   avatar: {
     type: String,
     default: 'https://pictures.s3.yandex.net/resources/jacques-cousteau_1604399756.png',
+    validate: (src) => pattern.test(src),
   },
   email: {
     type: String,
