@@ -2,6 +2,7 @@ const mongoose = require('mongoose');
 const Card = require('../models/card');
 const ValidationError = require('../helpers/errors/validationError');
 const NotFoundError = require('../helpers/errors/notFoundError');
+const ForbiddenError = require('../helpers/errors/forbiddenError');
 
 const getAllCards = (_, res, next) => {
   Card.find({})
@@ -26,7 +27,7 @@ const deleteCardById = (req, res, next) => {
     })
     .catch((e) => {
       if (e instanceof mongoose.Error.ValidationError) {
-        throw new ValidationError('Можно удалять только собственные карточки.');
+        throw new ForbiddenError('Можно удалять только собственные карточки.');
       } else if (e instanceof mongoose.Error.CastError) {
         throw new ValidationError('Переданы некорректные данные при удалении карточки.');
       } else if (e instanceof mongoose.Error.DocumentNotFoundError) {
