@@ -13,6 +13,7 @@ const deleteCardById = (req, res, next) => {
   const id = req.params.cardId;
 
   Card.findById(id)
+    .orFail()
     .then((card) => {
       if (card.owner.toString() !== req.user._id) {
         throw new mongoose.Error.ValidationError();
