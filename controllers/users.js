@@ -62,7 +62,11 @@ const createUser = (req, res, next) => {
       email,
       password: hash,
     }))
-    .then((data) => res.send(data))
+    .then((user) => {
+      // eslint-disable-next-line no-shadow
+      const { password, ...data } = user._doc;
+      res.send(data);
+    })
     .catch((e) => {
       if (e instanceof mongoose.Error.ValidationError) {
         throw new ValidationError(validationErrorMessage);
