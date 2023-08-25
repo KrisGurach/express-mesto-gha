@@ -2,9 +2,10 @@
 const router = require('express').Router();
 const { celebrate, errors, Joi } = require('celebrate');
 const { login, createUser } = require('../controllers/users');
-const { notFoundErrorCode, createError, serverErrorCode } = require('../helpers/errors/errorHelpers');
+const { serverErrorCode } = require('../helpers/errors/errorHelpers');
 const auth = require('../middlewares/auth');
 const { pattern } = require('../helpers/constantsHelpers');
+const NotFoundError = require('../helpers/errors/notFoundError');
 
 router.post('/signin', celebrate({
   body: Joi.object().keys({
@@ -29,6 +30,8 @@ router.use('/cards', require('./cards'));
 
 router.use(errors());
 
+router.use((_, __, next) => next(new NotFoundError('Not found')));
+
 // eslint-disable-next-line no-unused-vars
 router.use((err, _, res, __) => {
   const { statusCode = 500, message } = err;
@@ -41,7 +44,5 @@ router.use((err, _, res, __) => {
         : message,
     });
 });
-
-router.use((_, res) => res.status(notFoundErrorCode).send(createError('Not found')));
 
 module.exports = router;

@@ -110,11 +110,6 @@ const login = (req, res, next) => {
         secretKey,
         { expiresIn: '7d' },
       );
-      // res.cookie('jwt', token, {
-      //   maxAge: 3600 * 24 * 7,
-      //   httpOnly: true,
-      // })
-      //   .end();
       res.send({ token });
     })
     .catch(next);
