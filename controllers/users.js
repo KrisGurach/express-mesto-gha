@@ -6,10 +6,11 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 
 const User = require('../models/user');
-const { secretKey } = require('../helpers/constantsHelpers');
+const { secretKey, createSuccessStatusCode } = require('../helpers/constantsHelpers');
 const ValidationError = require('../helpers/errors/validationError');
 const NotFoundError = require('../helpers/errors/notFoundError');
 const DuplicateUniqueValueError = require('../helpers/errors/duplicateUniqueValueError');
+const ServerError = require('../helpers/errors/serverError');
 
 const userNotFound = (id) => `Пользователь с указанным id = ${id} не найден.`;
 
@@ -25,12 +26,13 @@ function findUserById(id, res, next) {
     .then((user) => res.send(user))
     .catch((e) => {
       if (e instanceof mongoose.Error.CastError) {
-        throw new ValidationError('Переданы некорректные данные при поиске пользователя.');
+        next(new ValidationError('Переданы некорректные данные при поиске пользователя.'));
       } else if (e instanceof mongoose.Error.DocumentNotFoundError) {
-        throw new NotFoundError(userNotFound(id));
+        next(new NotFoundError(userNotFound(id)));
+      } else {
+        next(new ServerError());
       }
-    })
-    .catch(next);
+    });
 }
 
 const getUserById = (req, res, next) => {
@@ -65,16 +67,17 @@ const createUser = (req, res, next) => {
     .then((user) => {
       // eslint-disable-next-line no-shadow
       const { password, ...data } = user._doc;
-      res.send(data);
+      res.status(createSuccessStatusCode).send(data);
     })
     .catch((e) => {
       if (e instanceof mongoose.Error.ValidationError) {
-        throw new ValidationError(validationErrorMessage);
+        next(new ValidationError(validationErrorMessage));
       } else if (e.code === 11000) {
-        throw new DuplicateUniqueValueError('Ползователь с указанным email уже существует');
+        next(new DuplicateUniqueValueError('Ползователь с указанным email уже существует'));
+      } else {
+        next(new ServerError());
       }
-    })
-    .catch(next);
+    });
 };
 
 const updateById = (req, res, parameters, next) => {
@@ -84,10 +87,11 @@ const updateById = (req, res, parameters, next) => {
     .then((user) => res.send(user))
     .catch((e) => {
       if (e instanceof mongoose.Error.ValidationError) {
-        throw new ValidationError('Переданы некорректные данные при обновлении профиля.');
+        next(new ValidationError('Переданы некорректные данные при обновлении профиля.'));
+      } else {
+        next(new ServerError());
       }
-    })
-    .catch(next);
+    });
 };
 
 const updateUser = (req, res, next) => {

@@ -3,6 +3,8 @@ const Card = require('../models/card');
 const ValidationError = require('../helpers/errors/validationError');
 const NotFoundError = require('../helpers/errors/notFoundError');
 const ForbiddenError = require('../helpers/errors/forbiddenError');
+const { createSuccessStatusCode } = require('../helpers/constantsHelpers');
+const ServerError = require('../helpers/errors/serverError');
 
 const getAllCards = (_, res, next) => {
   Card.find({})
@@ -20,34 +22,36 @@ const deleteCardById = (req, res, next) => {
         throw new mongoose.Error.ValidationError();
       }
 
-      Card.findByIdAndRemove(id)
+      Card.deleteOne(card)
         .orFail()
         .then((data) => res.send(data))
         .catch(next);
     })
     .catch((e) => {
       if (e instanceof mongoose.Error.ValidationError) {
-        throw new ForbiddenError('Можно удалять только собственные карточки.');
+        next(new ForbiddenError('Можно удалять только собственные карточки.'));
       } else if (e instanceof mongoose.Error.CastError) {
-        throw new ValidationError('Переданы некорректные данные при удалении карточки.');
+        next(new ValidationError('Переданы некорректные данные при удалении карточки.'));
       } else if (e instanceof mongoose.Error.DocumentNotFoundError) {
-        throw new NotFoundError(`Карточка с указанным id = ${id} не найдена.`);
+        next(new NotFoundError(`Карточка с указанным id = ${id} не найдена.`));
+      } else {
+        next(new ServerError());
       }
-    })
-    .catch(next);
+    });
 };
 
 const createCard = (req, res, next) => {
   const { name, link } = req.body;
 
   Card.create({ name, link, owner: req.user._id })
-    .then((data) => res.send(data))
+    .then((data) => res.status(createSuccessStatusCode).send(data))
     .catch((e) => {
       if (e instanceof mongoose.Error.ValidationError) {
-        throw new ValidationError('Переданы некорректные данные при создании карточки.');
+        next(new ValidationError('Переданы некорректные данные при создании карточки.'));
+      } else {
+        next(new ServerError());
       }
-    })
-    .catch(next);
+    });
 };
 
 const addLike = (req, res, next) => {
@@ -62,12 +66,13 @@ const addLike = (req, res, next) => {
     .then((data) => res.send(data))
     .catch((e) => {
       if (e instanceof mongoose.Error.CastError) {
-        throw new ValidationError('Переданы некорректные данные для постановки лайка.');
+        next(new ValidationError('Переданы некорректные данные для постановки лайка.'));
       } else if (e instanceof mongoose.Error.DocumentNotFoundError) {
-        throw new NotFoundError(`Передан несуществующий id = ${id} карточки.`);
+        next(new NotFoundError(`Передан несуществующий id = ${id} карточки.`));
+      } else {
+        next(new ServerError());
       }
-    })
-    .catch(next);
+    });
 };
 
 const deleteLike = (req, res, next) => {
@@ -82,12 +87,13 @@ const deleteLike = (req, res, next) => {
     .then((data) => res.send(data))
     .catch((e) => {
       if (e instanceof mongoose.Error.CastError) {
-        throw new ValidationError('Переданы некорректные данные для снятия лайка.');
+        next(new ValidationError('Переданы некорректные данные для снятия лайка.'));
       } else if (e instanceof mongoose.Error.DocumentNotFoundError) {
-        throw new NotFoundError(`Передан несуществующий id = ${id} карточки.`);
+        next(new NotFoundError(`Передан несуществующий id = ${id} карточки.`));
+      } else {
+        next(new ServerError());
       }
-    })
-    .catch(next);
+    });
 };
 
 module.exports = {

@@ -1,5 +1,7 @@
+const { errors } = require('celebrate');
 const express = require('express');
 const mongoose = require('mongoose');
+const { serverErrorCode } = require('./helpers/errors/errorHelpers');
 
 const app = express();
 
@@ -18,6 +20,21 @@ app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 
 app.use('/', require('./routes/index'));
+
+app.use(errors());
+
+// eslint-disable-next-line no-unused-vars
+app.use((err, _, res, __) => {
+  const { statusCode = 500, message } = err;
+
+  res
+    .status(statusCode)
+    .send({
+      message: statusCode === serverErrorCode
+        ? 'На сервере произошла ошибка'
+        : message,
+    });
+});
 
 app.listen(PORT, () => {
   // eslint-disable-next-line no-console
